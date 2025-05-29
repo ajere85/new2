@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exchange Rates Editor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #1a73e8;
+        }
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 5px 10px;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1557b0;
+        }
+        .update-btn {
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Today's Exchange Rates</h1>
+    <table id="exchangeTable">
+        <thead>
+            <tr>
+                <th>Currency</th>
+                <th>Buying</th>
+                <th>Selling</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+    </table>
+    <button onclick="clearRates()">Clear All Rates</button>
+
+    <script>
+        // Predefined list of currencies
+        const predefinedCurrencies = ["USD", "GBP", "EUR", "KES", "TZS", "ZAR", "CNY", "RWF"];
+
+        // Initialize exchange rates with predefined currencies and null rates
+        let exchangeRates = JSON.parse(localStorage.getItem('exchangeRates')) || predefinedCurrencies.map(currency => ({
+            currency,
+            buying: null,
+            selling: null
+        }));
+
+        // Function to render the table with editable inputs and update buttons
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = ''; // Clear the table
+            exchangeRates.forEach(rate => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rate.currency}</td>
+                    <td><input type="number" step="0.01" value="${rate.buying !== null ? rate.buying : ''}" id="buying-${rate.currency}"></td>
+                    <td><input type="number" step="0.01" value="${rate.selling !== null ? rate.selling : ''}" id="selling-${rate.currency}"></td>
+                    <td><button class="update-btn" onclick="updateRate('${rate.currency}')">Update</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Function to update a rate
+        function updateRate(currency) {
+            const buyingInput = document.getElementById(`buying-${currency}`);
+            const sellingInput = document.getElementById(`selling-${currency}`);
+            const newBuying = buyingInput.value.trim() === '' ? null : parseFloat(buyingInput.value);
+            const newSelling = sellingInput.value.trim() === '' ? null : parseFloat(sellingInput.value);
+
+            const rateIndex = exchangeRates.findIndex(rate => rate.currency === currency);
+            if (rateIndex !== -1) {
+                exchangeRates[rateIndex].buying = newBuying;
+                exchangeRates[rateIndex].selling = newSelling;
+                localStorage.setItem('exchangeRates', JSON.stringify(exchangeRates)); // Save to localStorage
+                renderTable(); // Re-render the table to reflect saved values
+            }
+        }
+
+        // Function to clear all rates
+        function clearRates() {
+            if (confirm('Are you sure you want to clear all rates?')) {
+                exchangeRates = predefinedCurrencies.map(currency => ({
+                    currency,
+                    buying: null,
+                    selling: null
+                }));
+                localStorage.setItem('exchangeRates', JSON.stringify(exchangeRates));
+                renderTable();
+            }
+        }
+
+        // Initial render
+        renderTable();
+    </script>
+</body>
+</html>
